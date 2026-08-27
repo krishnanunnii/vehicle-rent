@@ -2,17 +2,14 @@ FROM eclipse-temurin:11-jdk
 
 WORKDIR /app
 
-COPY pom.xml .
+COPY lib ./lib
 COPY src ./src
 COPY web ./web
 
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p bin && \
+    javac --release 8 -encoding UTF-8 -cp "lib/*" -d bin \
+    src/*.java src/model/*.java src/dao/*.java src/servlet/*.java src/util/*.java
 
-RUN mvn dependency:copy-dependencies -DincludeScope=provided -DoutputDirectory=target/dependency
+EXPOSE 8080
 
-RUN find src -name "*.java" > sources.txt && \
-    javac -cp "target/dependency/*" -d target/classes @sources.txt
-
-EXPOSE 10000
-
-CMD ["sh", "-c", "java -cp 'target/classes:target/dependency/*' ServerRunner"]
+CMD ["sh", "-c", "java -cp 'bin:lib/*' ServerRunner"]
